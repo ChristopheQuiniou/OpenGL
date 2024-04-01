@@ -2,18 +2,18 @@
 #include <glfw3.h>
 #include <iostream>
 
+#include "shader_helper\Shader.h"
+
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 #define WINDOW_TITLE "OpenGL 3.5"
 #define VERTEX_BUFFER_ID 1
-#define INFO_LOG_SIZE 512
+
 #define VAO_ONE 1
 
 //Main functions
 int initializeGLFW(GLFWwindow* &pWindow);
-
-int setupBasicShaders(unsigned int& shaderProgram);
 
 void setupVBOTriangle(unsigned int& vbo);
 
@@ -24,7 +24,8 @@ void setupTriangle2(unsigned int& vbo2);
 void setupEVORectangle(unsigned int& vbo, unsigned int& ebo);
 
 
-void setupVAOOne(unsigned int& vao);
+void setupVAO1(unsigned int& vao1);
+void setupVAO2(unsigned int& vao2);
 
 
 void processInput(GLFWwindow* window);
@@ -38,37 +39,28 @@ bool linkShaders(unsigned int vertexShader, unsigned int fragmentShader, unsigne
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 
+static float xPosition = 0.0f;
 
 int main() {
-
 	
 	GLFWwindow* pWindow = nullptr;
 	if (!initializeGLFW(pWindow)) {
 		return 1;
 	}
 
-	unsigned int shaderProgram;
-	if (!setupBasicShaders(shaderProgram)) {
+
+	Shader* shader = new Shader("E:\\Dev\\OpenGL\\BasicSetup\\shaders\\vertex_shader_with_color.glsl", "E:\\Dev\\OpenGL\\BasicSetup\\shaders\\fragment_shader_vertex_color.glsl");
+	if (!shader->initialize()) {
+		std::cerr << "[ERROR] : Shader initialization failed!" << std::endl;
 		return 1;
 	}
 
-	unsigned int vao = 0;
-	setupVAOOne(vao);
+
+	unsigned int vao1 = 0;
+	setupVAO1(vao1);
 
 	unsigned int vbo1 = 0;
-
 	setupTriangle1(vbo1);
-
-	unsigned int vao2 = 0;
-	setupVAOOne(vao2);
-	unsigned int vbo2 = 0;
-	setupTriangle2(vbo2);
-
-	//unsigned int ebo = 0;
-	//setupEVORectangle(vbo,ebo);
-
-
-
 
 	//Main loop
 	while (!glfwWindowShouldClose(pWindow)) {
@@ -80,28 +72,33 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		shader->use();
+		shader->setFloat("horizontalOffset", xPosition);
 		
+		//Nice green color
+		/*float timeValue = glfwGetTime();
+		float greenValue = -1 * (cos(timeValue) / 2.1f) + 0.6f;
+		int vertexColorLocation = glGetUniformLocation(shader->getProgram(), "color");
+		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);*/
 
-		glUseProgram(shaderProgram);
-		glBindVertexArray(vao);
+
+		glBindVertexArray(vao1);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 		
 		//Get events and swap buffers
 		glfwPollEvents();
 		glfwSwapBuffers(pWindow);
 		
-
 	}
 
 
 	//Clean up
-	glDeleteBuffers(1, &vao);
+	glDeleteBuffers(1, &vao1);
 	glDeleteBuffers(1, &vbo1);
-	glDeleteBuffers(1, &vbo2);
-	glDeleteProgram(shaderProgram);
+
 	
+	delete shader;
 
 	glfwTerminate();
 
@@ -144,63 +141,6 @@ int initializeGLFW(GLFWwindow* &pWindow) {
 }
 
 
-int setupBasicShaders(unsigned int & shaderProgram) {
-
-	//Logging
-	int success = false;
-	char infoLog[INFO_LOG_SIZE];
-
-
-
-	unsigned int vertexShader;
-	const char* vertexShaderSource = "#version 330 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
-		"void main() {\n"
-		"gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-		"}\0";
-
-	success = compileShader(vertexShaderSource, GL_VERTEX_SHADER, vertexShader);
-
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, INFO_LOG_SIZE, NULL, infoLog);
-		std::cerr << "[ERROR] : Vertex shader compilation failed!\n  >> " << infoLog << std::endl;
-		return 0;
-	}
-	std::cout << "Vertex shader compiled successfully!" << std::endl;
-
-
-
-	unsigned int fragmentShader;
-	const char* fragmentShaderSource = "#version 330 core\n"
-		"out vec4 FragColor;\n"
-		"void main() {\n"
-		"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-		"}\0";
-
-	success = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER, fragmentShader);
-
-	if (!success) {
-		glGetShaderInfoLog(fragmentShader, INFO_LOG_SIZE, NULL, infoLog);
-		std::cerr << "[ERROR] : Fragment shader compilation failed!\n >> " << infoLog << std::endl;
-		return 0;
-	}
-	std::cout << "Fragment shader compiled successfully!" << std::endl;
-
-
-
-	//Link shaders
-	shaderProgram = 0;
-	if (!linkShaders(vertexShader, fragmentShader, shaderProgram)) {
-		return 0;
-	}
-	else {
-		std::cout << "Shaders linked successfully!" << std::endl;
-	}
-
-	return 1;
-}
-
-
 
 //Handle window resizing and update viewport
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -213,6 +153,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
+	} else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		xPosition -= 0.001f;
+	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		xPosition += 0.001f;
 	}
 }
 
@@ -239,17 +183,10 @@ void setupTriangle1(unsigned int& vbo1) {
 
 	
 	float vertices1[] = {
-		-0.9f, -0.5f, 0.0f,  // left 
-		-0.0f, -0.5f, 0.0f,  // right
-		-0.45f, 0.5f, 0.0f,  // top 
+		-0.9f, -0.5f, 0.0f,1.0f,0.0f,0.0f,  // left 
+		-0.0f, -0.5f, 0.0f,0.0f,1.0f,0.0f,  // right
+		-0.45f, 0.5f, 0.0f,0.0f,0.0f,1.0f,  // top 
 	
-	};
-
-	float vertices2[] = {
-		// second triangle
-		0.0f, -0.5f, 0.0f,  // left
-		0.9f, -0.5f, 0.0f,  // right
-		0.45f, 0.5f, 0.0f   // top 
 	};
 
 
@@ -265,14 +202,17 @@ void setupTriangle1(unsigned int& vbo1) {
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
 
 	// Setup vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
 }
 
 
 void setupTriangle2(unsigned int& vbo2) {
 
-float vertices2[] = {
+	float vertices2[] = {
 		// second triangle
 		0.0f, -0.5f, 0.0f,  // left
 		0.9f, -0.5f, 0.0f,  // right
@@ -288,7 +228,6 @@ float vertices2[] = {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 }
-
 
 void setupEVORectangle(unsigned int& vbo, unsigned int& ebo)
 {
@@ -319,10 +258,17 @@ void setupEVORectangle(unsigned int& vbo, unsigned int& ebo)
 	glEnableVertexAttribArray(0);
 }
 
-void setupVAOOne(unsigned int & vao) {
+void setupVAO1(unsigned int & vao1) {
 	
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	glGenVertexArrays(1, &vao1);
+	glBindVertexArray(vao1);
+
+}
+
+void setupVAO2(unsigned int& vao2) {
+
+	glGenVertexArrays(1, &vao2);
+	glBindVertexArray(vao2);
 
 }
 
