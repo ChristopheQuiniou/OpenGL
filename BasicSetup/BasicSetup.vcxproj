@@ -71,11 +71,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\src;E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\include;E:\Dev\Dependancies\OpenGL\includes;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\src;E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\include;E:\Dev\Dependancies\OpenGL\includes;E:\Dev\Dependancies\Image_loader;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files %28x86%29\Windows Kits\10\Lib\10.0.22621.0\um\x64;E:\Dev\Dependancies\OpenGL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\src;E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\include;E:\Dev\Dependancies\OpenGL\includes;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\src;E:\Dev\Dependancies\GLAD\OpenGL 4 minimal\include;E:\Dev\Dependancies\OpenGL\includes;E:\Dev\Dependancies\Image_loader;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files %28x86%29\Windows Kits\10\Lib\10.0.22621.0\um\x64;E:\Dev\Dependancies\OpenGL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -142,6 +142,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Dependancies\Image loader\stb_image.h" />
     <ClInclude Include="src\shader_helper\Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

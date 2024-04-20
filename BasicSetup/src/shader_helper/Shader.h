@@ -17,6 +17,7 @@ public:
 	unsigned int getProgram();
 
 	void setFloat(const std::string& name, float value) const;
+	void setInt(const std::string& name, int value) const;
 
 private:
 	bool readShaderSource();

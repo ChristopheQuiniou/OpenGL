@@ -29,5 +29,8 @@
     <ClInclude Include="src\shader_helper\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Dependancies\Image loader\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
